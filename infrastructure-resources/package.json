@@ -1,0 +1,19 @@
+{
+  "name": "infrastructure-resources",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "cdktf-cli": "0.0.12",
+    "eslint": "^7.14.0",
+    "eslint-plugin-react": "^7.21.5"
+  },
+  "devDependencies": {
+    "constructs": "^3.2.44"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
