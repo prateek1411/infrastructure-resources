@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "cdktf-cli": "0.0.12",
+    "cdktf": "0.0.18",
+    "cdktf-cli": "0.0.18",
     "eslint": "^7.14.0",
     "eslint-plugin-react": "^7.21.5"
   },

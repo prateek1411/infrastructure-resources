@@ -1,10 +1,13 @@
 {
   "language": "python",
-  "app": "python3 main.py",
-  "terraformProviders": ["aws@~> 2.0","azurerm@~>2.25"],
+  "app": "python main.py",
+  "terraformProviders": [
+    "aws@~> 2.0",
+    "azurerm@~>2.25"
+  ],
   "codeMakerOutput": "imports",
   "context": {
     "excludeStackIdFromLogicalIds": "true",
-"allowSepCharsInLogicalIds": "true"
+    "allowSepCharsInLogicalIds": "true"
   }
 }
