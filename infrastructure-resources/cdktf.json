@@ -2,7 +2,7 @@
   "language": "python",
   "app": "python main.py",
   "terraformProviders": [
-    "aws@~> 2.0",
+    "kubernetes@~> 1.11.3",
     "azurerm@~>2.25"
   ],
   "codeMakerOutput": "imports",
