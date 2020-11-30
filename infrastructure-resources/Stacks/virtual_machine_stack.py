@@ -1,27 +1,25 @@
-import os
-
 from cdktf import TerraformStack, AzurermBackend
 from constructs import Construct
-from decouple import config
-from Crypto.PublicKey import RSA
 
+from Stacks.utils import check_keys
 from imports.azurerm import AzurermProviderFeatures, AzurermProvider, KubernetesClusterDefaultNodePool, ResourceGroup, \
     VirtualNetwork, Subnet, NetworkInterface, VirtualMachineStorageOsDisk, VirtualMachineStorageImageReference, \
     VirtualMachineOsProfile, VirtualMachineOsProfileLinuxConfigSshKeys, VirtualMachineOsProfileLinuxConfig, \
     VirtualMachine, NetworkInterfaceIpConfiguration
-subscription_id = config('subscription_id')
-client_id = config('client_id')
-client_secret = config('client_secret')
-tenant_id = config('tenant_id')
-access_key = config('access_key')
-key = RSA.generate(4086, os.urandom)
-with open(os.path.join("../Prateek-vm2.pem"), 'wb') as content_file:
-    content_file.write(key.exportKey('PEM'))
-    key_data = str(key.publickey().exportKey('OpenSSH').decode("utf-8"))
 
 
 class MyVirtualMachine(TerraformStack):
-    def __init__(self, scope: Construct, ns: str):
+    def __init__(self, scope: Construct, ns: str, auth_dict):
+        keys = []
+        for k in auth_dict.items():
+            keys.append(k)
+        subscription_id = auth_dict['subscription_id'] if check_keys(key='subscription_id',
+                                                                      key_list=keys) else None
+        client_id = auth_dict['client_id'] if check_keys(key='client_id', key_list=keys) else None
+        client_secret = auth_dict['client_secret'] if check_keys(key='client_secret', key_list=keys) else None
+        tenant_id = auth_dict['tenant_id'] if check_keys(key='tenant_id', key_list=keys) else None
+        access_key = auth_dict['access_key'] if check_keys(key='access_key', key_list=keys) else None
+        key_data = auth_dict['key_data'] if check_keys(key='key_data', key_list=keys) else None
         super().__init__(scope, ns)
 
         # define resources here
@@ -46,6 +44,7 @@ class MyVirtualMachine(TerraformStack):
                                          )
         virtual_subnetwork = Subnet(self, 'azure-subnet', name='TerraformSubVNet',
                                     resource_group_name=resource_group.name,
+                                    address_prefixes=['10.0.0.0/24'],
                                     virtual_network_name=virtual_network.name,
                                     depends_on=[resource_group, virtual_network]
                                     )
@@ -75,4 +74,3 @@ class MyVirtualMachine(TerraformStack):
                                   os_profile=[os_profile],  #
                                   os_profile_linux_config=[os_profile_linux_config],
                                   vm_size='Standard_D2_v2')
-
