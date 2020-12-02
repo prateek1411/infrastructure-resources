@@ -2,12 +2,13 @@
   "language": "python",
   "app": "python main.py",
   "terraformProviders": [
-    "kubernetes@~> 1.11.3",
-    "azurerm@~>2.25"
+    "kubernetes@~> 1.7",
+    "azurerm@~>2.38",
+    "helm@~>1.0"
   ],
   "codeMakerOutput": "imports",
   "context": {
     "excludeStackIdFromLogicalIds": "true",
-    "allowSepCharsInLogicalIds": "true"
+    "allowSepCharsInLogicalIds": "false"
   }
 }

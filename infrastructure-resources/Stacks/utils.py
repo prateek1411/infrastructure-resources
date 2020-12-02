@@ -3,4 +3,10 @@ def check_keys(key, key_list):
         return True
     else:
         print("{0} in mandatory".format(key))
-        return False
+        exit(1)
+
+
+def add_base64decode(reource_string):
+    stripped_string = ''.join(c for c in reource_string if c not in '{}$')
+    base64decode_string = "base64decode({0})".format(stripped_string)
+    return '${' + base64decode_string + '}'
