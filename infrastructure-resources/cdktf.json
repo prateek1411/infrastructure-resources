@@ -3,8 +3,7 @@
   "app": "python main.py",
   "terraformProviders": [
     "kubernetes@~> 1.7",
-    "azurerm@~>2.38",
-    "helm@~>1.0"
+    "azurerm@~>2.38"
   ],
   "codeMakerOutput": "imports",
   "context": {

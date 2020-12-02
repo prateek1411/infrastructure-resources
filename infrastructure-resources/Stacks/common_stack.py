@@ -2,10 +2,7 @@ from cdktf import TerraformStack, AzurermBackend
 from constructs import Construct
 
 from Stacks.utils import check_keys
-from imports.azurerm import AzurermProviderFeatures, AzurermProvider, KubernetesClusterDefaultNodePool, ResourceGroup, \
-    VirtualNetwork, Subnet, NetworkInterface, VirtualMachineStorageOsDisk, VirtualMachineStorageImageReference, \
-    VirtualMachineOsProfile, VirtualMachineOsProfileLinuxConfigSshKeys, VirtualMachineOsProfileLinuxConfig, \
-    VirtualMachine, NetworkInterfaceIpConfiguration
+from imports.azurerm import AzurermProviderFeatures, AzurermProvider, ResourceGroup
 
 
 class MyCommonStack(TerraformStack):
@@ -32,4 +29,3 @@ class MyCommonStack(TerraformStack):
                                    tenant_id=tenant_id)
 
         resource_group = ResourceGroup(self, 'azurerg', name='common', location='East US')
-

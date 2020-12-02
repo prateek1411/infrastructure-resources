@@ -1,14 +1,11 @@
-from cdktf import TerraformResourceLifecycle, TerraformStack, AzurermBackend, TerraformVariable, TerraformModule, \
-    TerraformOutput, ITerraformResource
+from cdktf import TerraformResourceLifecycle, TerraformStack, TerraformVariable, TerraformModule
 from constructs import Construct
 
 from Stacks.utils import check_keys, add_base64decode
 from imports.azurerm import KubernetesClusterNodePool, KubernetesClusterRoleBasedAccessControl, \
     KubernetesClusterAddonProfileKubeDashboard, KubernetesClusterDefaultNodePool, ResourceGroup, \
     KubernetesClusterIdentity, KubernetesClusterLinuxProfile, KubernetesClusterLinuxProfileSshKey, KubernetesCluster, \
-    KubernetesClusterNetworkProfile, KubernetesClusterAddonProfile, AzurermProviderFeatures, AzurermProvider, \
-    RoleAssignment
-from imports.helm import HelmProvider, HelmProviderKubernetes, Release
+    KubernetesClusterNetworkProfile, KubernetesClusterAddonProfile, AzurermProviderFeatures, AzurermProvider
 from imports.kubernetes import KubernetesProvider, Namespace, NamespaceMetadata
 
 
@@ -106,10 +103,10 @@ class MyK8S(TerraformStack):
         #        RoleAssignment(self, "network_contributer", scope=resource_group.id,
         #                       principal_id=identity.principal_id,
         #                       role_definition_name='Network Contributor')
-#        RoleAssignment(self, "kubectl_pull", scope=resource_group.id,
-#                       principal_id=cluster.kubelet_identity(index='0').object_id,
-#                       role_definition_name='AcrPull')
-#
+        #        RoleAssignment(self, "kubectl_pull", scope=resource_group.id,
+        #                       principal_id=cluster.kubelet_identity(index='0').object_id,
+        #                       role_definition_name='AcrPull')
+        #
         k8s_provider = KubernetesProvider(self, 'k8s', load_config_file=False,
                                           host=cluster.kube_config(index='0').host,
                                           client_key=add_base64decode(cluster.kube_config(index='0').client_key),
@@ -118,17 +115,17 @@ class MyK8S(TerraformStack):
                                           cluster_ca_certificate=add_base64decode(
                                               cluster.kube_config(index='0').cluster_ca_certificate)
                                           )
-#        helm_provider = HelmProvider(self, 'helm',kubernetes=[HelmProviderKubernetes(load_config_file=False,
-#                                                                       host=cluster.kube_config(index='0').host,
-#                                                                       client_key=add_base64decode(
-#                                                                           cluster.kube_config(index='0').client_key),
-#                                                                       client_certificate=add_base64decode(
-#                                                                           cluster.kube_config(
-#                                                                               index='0').client_certificate),
-#                                                                       cluster_ca_certificate=add_base64decode(
-#                                                                           cluster.kube_config(
-#                                                                               index='0').cluster_ca_certificate))])
-#
+        #        helm_provider = HelmProvider(self, 'helm',kubernetes=[HelmProviderKubernetes(load_config_file=False,
+        #                                                                       host=cluster.kube_config(index='0').host,
+        #                                                                       client_key=add_base64decode(
+        #                                                                           cluster.kube_config(index='0').client_key),
+        #                                                                       client_certificate=add_base64decode(
+        #                                                                           cluster.kube_config(
+        #                                                                               index='0').client_certificate),
+        #                                                                       cluster_ca_certificate=add_base64decode(
+        #                                                                           cluster.kube_config(
+        #                                                                               index='0').cluster_ca_certificate))])
+        #
         # Add traefik and certmanager to expose services by https.
         traefik_ns_metadata = NamespaceMetadata(name='traefik', labels={'created_by': 'PythonCDK', 'location': 'eastus',
                                                                         'resource_group': var_rg_name})

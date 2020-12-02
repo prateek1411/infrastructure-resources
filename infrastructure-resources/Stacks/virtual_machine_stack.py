@@ -2,7 +2,7 @@ from cdktf import TerraformStack, AzurermBackend
 from constructs import Construct
 
 from Stacks.utils import check_keys
-from imports.azurerm import AzurermProviderFeatures, AzurermProvider, KubernetesClusterDefaultNodePool, ResourceGroup, \
+from imports.azurerm import AzurermProviderFeatures, AzurermProvider, ResourceGroup, \
     VirtualNetwork, Subnet, NetworkInterface, VirtualMachineStorageOsDisk, VirtualMachineStorageImageReference, \
     VirtualMachineOsProfile, VirtualMachineOsProfileLinuxConfigSshKeys, VirtualMachineOsProfileLinuxConfig, \
     VirtualMachine, NetworkInterfaceIpConfiguration
