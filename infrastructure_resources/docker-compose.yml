@@ -1,0 +1,10 @@
+---
+version: "3.6"
+
+services:
+  digirise-web:
+    image: prateek1411/infrastructure_code
+    restart: always
+    container_name: "infrastructure_code"
+    env_file:
+      - ./.env

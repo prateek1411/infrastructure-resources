@@ -1,10 +1,11 @@
-FROM hashicorp.jfrog.io/docker/jsii/superchain
+FROM python:3.9-buster
 
-RUN yum install -y unzip jq && curl https://raw.githubusercontent.com/pypa/pipenv/master/get-pipenv.py | python3
+RUN curl -sL https://deb.nodesource.com/setup_10.x -o nodesource_setup.sh
 
-RUN yum install python3-pip
+RUN bash nodesource_setup.sh
+RUN apt-get install nodejs
 
-ENV DEFAULT_TERRAFORM_VERSION=0.13.4                                \
+ENV DEFAULT_TERRAFORM_VERSION=0.13.5                                \
     TF_PLUGIN_CACHE_DIR="/root/.terraform.d/plugin-cache"           \
     # MAVEN_OPTS is set in jsii/superchain with -Xmx512m. This isn't enough memory for provider generation.
     MAVEN_OPTS="-Xms256m -Xmx3G"
@@ -30,3 +31,5 @@ WORKDIR /opt/app/infrastructure-resources
 
 RUN pip install -r requirements.txt --cache-dir /opt/app/pip_cache
 RUN cdktf get
+STOPSIGNAL SIGTERM
+CMD ["/bin/bash"]

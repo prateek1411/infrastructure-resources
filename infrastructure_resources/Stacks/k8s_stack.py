@@ -9,7 +9,7 @@ from imports.azurerm import KubernetesClusterNodePool, KubernetesClusterRoleBase
 from imports.kubernetes import KubernetesProvider, Namespace, NamespaceMetadata
 
 
-class MyK8S(TerraformStack):
+class K8Stack(TerraformStack):
     def __init__(self, scope: Construct, ns: str, auth_dict: dict, k8s_stack_variable: dict):
         keys = list(auth_dict.keys())
 

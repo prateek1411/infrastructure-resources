@@ -5,7 +5,7 @@ from Stacks.utils import check_keys
 from imports.azurerm import AzurermProviderFeatures, AzurermProvider, ResourceGroup
 
 
-class MyCommonStack(TerraformStack):
+class CommonStack(TerraformStack):
     def __init__(self, scope: Construct, ns: str, auth_dict):
         keys = list(auth_dict.keys())
         subscription_id = auth_dict['subscription_id'] if check_keys(key='subscription_id',

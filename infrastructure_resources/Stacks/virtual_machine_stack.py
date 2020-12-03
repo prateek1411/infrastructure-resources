@@ -8,7 +8,7 @@ from imports.azurerm import AzurermProviderFeatures, AzurermProvider, ResourceGr
     VirtualMachine, NetworkInterfaceIpConfiguration
 
 
-class MyVirtualMachine(TerraformStack):
+class VirtualMachineStack(TerraformStack):
     def __init__(self, scope: Construct, ns: str, auth_dict):
         keys = list(auth_dict.keys())
         subscription_id = auth_dict['subscription_id'] if check_keys(key='subscription_id',

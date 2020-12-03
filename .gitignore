@@ -1,2 +1,12 @@
 /.vscode
 /workspace.code-workspace
+/infrastructure_resources/id_rsa.pub
+/infrastructure_resources/common/
+/infrastructure_resources/k8s/
+/infrastructure_resources/vm/
+/infrastructure_resources/Prateek-vm2.pem
+/infrastructure_resources_backup/
+/node_modules/
+/package-lock.json
+/Prateek-vm2.pem
+/stack-vm2.pem
