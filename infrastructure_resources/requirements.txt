@@ -3,3 +3,4 @@ python-decouple
 pycryptodome
 Flask
 gunicorn
+Flask-AutoIndex

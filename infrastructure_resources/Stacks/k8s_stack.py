@@ -26,6 +26,7 @@ class K8Stack(TerraformStack):
         var_rg_name = k8s_stack_variable['rg_name'] if check_keys(key='rg_name', key_list=keys) else None
         var_vm_size = k8s_stack_variable['vm_size'] if check_keys(key='vm_size', key_list=keys) else None
         var_dns_prefix = k8s_stack_variable['dns_prefix'] if check_keys(key='dns_prefix', key_list=keys) else None
+        common_code_dir = k8s_stack_variable['common_code_dir'] if check_keys(key='common_code_dir', key_list=keys) else None
         super().__init__(scope, ns)
         ##### Terraform Variables ########
 
@@ -60,7 +61,7 @@ class K8Stack(TerraformStack):
                                    client_id=client_id, client_secret=client_secret,
                                    tenant_id=tenant_id)
 
-        common_module = TerraformModule(self, 'common_module', source='../common')
+        common_module = TerraformModule(self, 'common_module', source='../{0}'.format(common_code_dir))
         node_pool = KubernetesClusterDefaultNodePool(
             name='default', node_count=tf_node_count.number_value, vm_size=var_vm_size)
 

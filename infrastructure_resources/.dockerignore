@@ -16,3 +16,4 @@
 *.pem
 *.pub
 imports
+generated_code/*
