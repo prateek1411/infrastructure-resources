@@ -32,4 +32,5 @@ WORKDIR /opt/app/infrastructure_resources
 RUN pip install -r requirements.txt --cache-dir /opt/app/pip_cache
 RUN cdktf get
 STOPSIGNAL SIGTERM
-CMD ["/bin/bash"]
+EXPOSE 5000
+CMD ["/bin/bash","/opt/app/infrastructure_resources/start-server.sh"]

@@ -32,3 +32,4 @@ class CreateK8Stack:
                               'dns_prefix': 'k8s'}
         k8s_stack.K8Stack(app_k8s, "k8s-cluster", auth_dict=self.auth_dict, k8s_stack_variable=k8s_stack_variable)
         app_k8s.synth()
+        return "success"

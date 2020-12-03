@@ -1,6 +1,6 @@
 {
   "language": "python",
-  "app": "python main.py",
+  "app": "python infrastructure_api.py",
   "terraformProviders": [
     "kubernetes@~> 1.7",
     "azurerm@~>2.38"

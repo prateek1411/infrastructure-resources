@@ -2,3 +2,4 @@ cdktf~=0.0.18
 python-decouple
 pycryptodome
 Flask
+gunicorn
