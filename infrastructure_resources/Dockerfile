@@ -23,11 +23,11 @@ RUN npm install --global constructs@^3.0.0 eslint-plugin-react@7.21.5 eslint@^7 
 # Install infrastruture code
 RUN mkdir -p /opt/app
 RUN mkdir -p /opt/app/pip_cache
-RUN mkdir -p /opt/app/infrastructure-resources
+RUN mkdir -p /opt/app/infrastructure_resources
 RUN mkdir -p /opt/app/pip_cache
-COPY Stacks /opt/app/infrastructure-resources/
-COPY ./ /opt/app/infrastructure-resources/
-WORKDIR /opt/app/infrastructure-resources
+COPY Stacks /opt/app/infrastructure_resources/
+COPY ./ /opt/app/infrastructure_resources/
+WORKDIR /opt/app/infrastructure_resources
 
 RUN pip install -r requirements.txt --cache-dir /opt/app/pip_cache
 RUN cdktf get
