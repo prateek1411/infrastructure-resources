@@ -7,7 +7,7 @@ from flask import Flask, jsonify, request, make_response, json
 app = Flask(__name__)
 
 
-@app.route('/generate', methods=['GET', 'POST'])
+@app.route('/generate/', methods=['GET', 'POST'])
 def create_stack():
     if request.method == 'GET':
         return jsonify(CreateK8Stack().create_stack())
@@ -36,7 +36,7 @@ def stacklist():
     if request.method == 'GET':
         for dirPath, subdirList, filelist in os.walk(os.path.join(os.path.curdir, 'generated_code'),
                                                      topdown=True):
-            subdirList[:] = [d for d in subdirList if d not in [".terraform"]]
+            subdirList[:] = [d for d in subdirList if d not in [".terraform",".dir"]]
             tf_file_file = []
             for filename in filelist:
                 tf_file_file.append(filename)
@@ -78,4 +78,5 @@ def __run_command(tf_command):
 
 
 if __name__ == '__main__':
-    app.run()
+    #app.run()
+    CreateK8Stack().create_stack()

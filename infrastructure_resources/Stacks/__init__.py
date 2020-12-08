@@ -35,7 +35,7 @@ class CreateK8Stack:
         virtual_machine_stack.VirtualMachineStack(app_vm, "virtual-machine", self.auth_dict)
         app_vm.synth()
         k8s_stack_variable = {'tags': {'foo': 'bar'}, 'rg_name': 'k8s_rg', 'vm_size': 'Standard_D2_v2',
-                              'dns_prefix': 'k8s', 'common_code_dir': '{0}_common'.format(self.__code_dir_prifix)}
+                              'dns_prefix': 'k8s', 'common_code_dir': 'common'.format(self.__code_dir_prifix)}
         k8s_stack.K8Stack(app_k8s, "k8s-cluster", auth_dict=self.auth_dict, k8s_stack_variable=k8s_stack_variable)
         app_k8s.synth()
         return "success"

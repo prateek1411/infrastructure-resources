@@ -8,6 +8,8 @@ from imports.azurerm import KubernetesClusterNodePool, KubernetesClusterRoleBase
     KubernetesClusterNetworkProfile, KubernetesClusterAddonProfile, AzurermProviderFeatures, AzurermProvider
 from imports.kubernetes import KubernetesProvider, Namespace, NamespaceMetadata
 
+from imports.helm import HelmProvider, HelmProviderKubernetes, Release
+
 
 class K8Stack(TerraformStack):
     def __init__(self, scope: Construct, ns: str, auth_dict: dict, k8s_stack_variable: dict):
@@ -116,54 +118,55 @@ class K8Stack(TerraformStack):
                                           cluster_ca_certificate=add_base64decode(
                                               cluster.kube_config(index='0').cluster_ca_certificate)
                                           )
-        #        helm_provider = HelmProvider(self, 'helm',kubernetes=[HelmProviderKubernetes(load_config_file=False,
-        #                                                                       host=cluster.kube_config(index='0').host,
-        #                                                                       client_key=add_base64decode(
-        #                                                                           cluster.kube_config(index='0').client_key),
-        #                                                                       client_certificate=add_base64decode(
-        #                                                                           cluster.kube_config(
-        #                                                                               index='0').client_certificate),
-        #                                                                       cluster_ca_certificate=add_base64decode(
-        #                                                                           cluster.kube_config(
-        #                                                                               index='0').cluster_ca_certificate))])
-        #
+        
+        helm_provider = HelmProvider(self, 'helm',kubernetes=[HelmProviderKubernetes(load_config_file=False,
+                                                                       host=cluster.kube_config(index='0').host,
+                                                                       client_key=add_base64decode(
+                                                                           cluster.kube_config(index='0').client_key),
+                                                                       client_certificate=add_base64decode(
+                                                                           cluster.kube_config(
+                                                                               index='0').client_certificate),
+                                                                       cluster_ca_certificate=add_base64decode(
+                                                                           cluster.kube_config(
+                                                                               index='0').cluster_ca_certificate))])
+
         # Add traefik and certmanager to expose services by https.
         traefik_ns_metadata = NamespaceMetadata(name='traefik', labels={'created_by': 'PythonCDK', 'location': 'eastus',
                                                                         'resource_group': var_rg_name})
         traefik_ns = Namespace(self, 'traefik-ns', metadata=[traefik_ns_metadata])
-        #        helm_traefik2_value = '''
-        # deployment:
-        #  replicas: 2
-        # rbac:
-        #  enabled: true
-        # providers:
-        #  kubernetesIngress:
-        #    enabled: true
-        # additionalArguments:
-        # - "--entryPoints.websecure.http.tls.options=traefik-default-tlsoption@kubernetescrd"
-        # - "--serverstransport.insecureskipverify=true"
-        # service:
-        #  spec:
-        #    sessionAffinity: ClientIP
-        #    externalTrafficPolicy: Local
-        # '''
-        #        helm_traefik2_release = Release(self,'traefik2', name='traefik', repository='https://containous.github.io/traefik-helm-chart',
-        #                                        chart='traefik', namespace='traefik',
-        #                                        values=[helm_traefik2_value])
+        helm_traefik2_value = '''
+deployment:
+ replicas: 2
+rbac:
+ enabled: true
+providers:
+ kubernetesIngress:
+   enabled: true
+additionalArguments:
+- "--entryPoints.websecure.http.tls.options=traefik-default-tlsoption@kubernetescrd"
+- "--serverstransport.insecureskipverify=true"
+service:
+ spec:
+   sessionAffinity: ClientIP
+   externalTrafficPolicy: Local
+'''
+        helm_traefik2_release = Release(self,'traefik2', name='traefik', repository='https://containous.github.io/traefik-helm-chart',
+                                                chart='traefik', namespace='traefik',
+                                                values=[helm_traefik2_value])
         cert_manager_ns_metadata = NamespaceMetadata(name='cert-manager',
                                                      labels={'created_by': 'PythonCDK', "location": 'eastus',
                                                              'resource_group': var_rg_name})
         cert_manager_ns = Namespace(self, 'cert-manager-ns', metadata=[cert_manager_ns_metadata])
 
-#       cert_manager_value = '''
-# ngressShim:
-# defaultIssuerKind: ClusterIssuer
-# defaultIssuerName: letsencrypt
-# nstallCRDs: true
-# ''
-#       cert_manager_release = Release(self, 'cert-manager', name='cert-manager',
-#                                       repository='https://charts.jetstack.io',
-#                                       chart='cert-manager', namespace='cert-manager',
-#                                       values=[cert_manager_value]
-#                                      )
-#
+        cert_manager_value = '''
+ ingressShim:
+     defaultIssuerKind: ClusterIssuer
+     defaultIssuerName: letsencrypt
+     installCRDs: true
+ '''
+        cert_manager_release = Release(self, 'cert-manager', name='cert-manager',
+                                       repository='https://charts.jetstack.io',
+                                       chart='cert-manager', namespace='cert-manager',
+                                       values=[cert_manager_value]
+                                      )
+
