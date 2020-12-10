@@ -1,0 +1,5 @@
+language: python
+app: pipenv run ./main.py
+imports:
+  - k8s
+  - https://github.com/jetstack/cert-manager/releases/download/v1.1.0/cert-manager.crds.yaml

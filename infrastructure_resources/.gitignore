@@ -6,4 +6,4 @@ cdktf.out
 terraform.tfstate*
 .env
 node_modules/*
-generated_code/*
+../generated_code/*

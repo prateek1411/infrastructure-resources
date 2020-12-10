@@ -2,6 +2,7 @@ import os
 import subprocess
 
 from Stacks import CreateK8Stack
+from k8sresources.Charts import K8SChart
 from flask import Flask, jsonify, request, make_response, json
 
 app = Flask(__name__)
@@ -18,7 +19,8 @@ def stack_file_list(file_path):
     generated_files = {}
     if request.method == 'GET':
         file_path = '' if id is None else file_path
-        for dirPath, subdirList, filelist in os.walk(os.path.join(os.path.curdir, 'generated_code', file_path),
+        for dirPath, subdirList, filelist in os.walk(os.path.join(os.path.curdir,
+                                                                  'generated_code', file_path),
                                                      topdown=True):
             subdirList[:] = [d for d in subdirList if d not in [".terraform"]]
             tf_file_file = []
@@ -34,7 +36,8 @@ def stack_file_list(file_path):
 def stacklist():
     generated_files = {}
     if request.method == 'GET':
-        for dirPath, subdirList, filelist in os.walk(os.path.join(os.path.curdir, 'generated_code'),
+        for dirPath, subdirList, filelist in os.walk(os.path.join(os.path.curdir,
+                                                                  'generated_code'),
                                                      topdown=True):
             subdirList[:] = [d for d in subdirList if d not in [".terraform",".dir"]]
             tf_file_file = []
@@ -80,3 +83,4 @@ def __run_command(tf_command):
 if __name__ == '__main__':
     #app.run()
     CreateK8Stack().create_stack()
+    K8SChart().create_chart()
