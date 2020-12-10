@@ -1,4 +1,4 @@
-from cdktf import TerraformResourceLifecycle, TerraformStack, TerraformVariable, TerraformModule
+from cdktf import TerraformResourceLifecycle, TerraformStack, TerraformVariable, TerraformModule, ITerraformDependable
 from constructs import Construct
 
 from Stacks.utils import check_keys, add_base64decode
@@ -34,7 +34,7 @@ class K8Stack(TerraformStack):
 
         tf_key_data = TerraformVariable(self, 'key_data', type='string', default=key_data)
         tf_access_key = TerraformVariable(self, 'access_key', type='string', default=access_key)
-        tf_location = TerraformVariable(self, 'location', type='string', default='East Us')
+        tf_location = TerraformVariable(self, 'location', type='string', default='West Europe')
 
         tf_storage_resource_group_name = TerraformVariable(self, 'stogage_resource_group_name', type='string',
                                                            default='prateek-vm_group')
@@ -63,7 +63,7 @@ class K8Stack(TerraformStack):
                                    client_id=client_id, client_secret=client_secret,
                                    tenant_id=tenant_id)
 
-        common_module = TerraformModule(self, 'common_module', source='../{0}'.format(common_code_dir))
+#        common_module = TerraformModule(self, 'common_module', source='../{0}'.format(common_code_dir))
         node_pool = KubernetesClusterDefaultNodePool(
             name='default', node_count=tf_node_count.number_value, vm_size=var_vm_size)
 
@@ -95,13 +95,13 @@ class K8Stack(TerraformStack):
             role_based_access_control=[KubernetesClusterRoleBasedAccessControl(enabled=True)],
             tags=var_tags
         )
-        cluster_node_pool = KubernetesClusterNodePool(
-            self, "k8sNodePool",
-            kubernetes_cluster_id=cluster.id,
-            name='k8snodepool', node_count=tf_node_count.number_value, vm_size=var_vm_size,
-            enable_auto_scaling=True,
-            min_count=tf_min_count.number_value, max_count=tf_max_count.number_value, max_pods=tf_max_pod.number_value,
-            lifecycle=TerraformResourceLifecycle(create_before_destroy=True, ignore_changes=['node_count']))
+#        cluster_node_pool = KubernetesClusterNodePool(
+#            self, "k8sNodePool",
+#            kubernetes_cluster_id=cluster.id,
+#            name='k8snodepool', node_count=tf_node_count.number_value, vm_size=var_vm_size,
+#            enable_auto_scaling=True,
+#            min_count=tf_min_count.number_value, max_count=tf_max_count.number_value, max_pods=tf_max_pod.number_value,
+#            lifecycle=TerraformResourceLifecycle(create_before_destroy=True, ignore_changes=['node_count']))
 
         #        RoleAssignment(self, "network_contributer", scope=resource_group.id,
         #                       principal_id=identity.principal_id,
@@ -110,6 +110,7 @@ class K8Stack(TerraformStack):
         #                       principal_id=cluster.kubelet_identity(index='0').object_id,
         #                       role_definition_name='AcrPull')
         #
+        ###############Removed Temporarly ######################################
         k8s_provider = KubernetesProvider(self, 'k8s', load_config_file=False,
                                           host=cluster.kube_config(index='0').host,
                                           client_key=add_base64decode(cluster.kube_config(index='0').client_key),
@@ -118,7 +119,7 @@ class K8Stack(TerraformStack):
                                           cluster_ca_certificate=add_base64decode(
                                               cluster.kube_config(index='0').cluster_ca_certificate)
                                           )
-        
+
         helm_provider = HelmProvider(self, 'helm',kubernetes=[HelmProviderKubernetes(load_config_file=False,
                                                                        host=cluster.kube_config(index='0').host,
                                                                        client_key=add_base64decode(
@@ -135,33 +136,26 @@ class K8Stack(TerraformStack):
                                                                         'resource_group': var_rg_name})
         traefik_ns = Namespace(self, 'traefik-ns', metadata=[traefik_ns_metadata])
         helm_traefik2_value = '''
-deployment:
- replicas: 2
-rbac:
- enabled: true
-providers:
- kubernetesIngress:
-   enabled: true
 additionalArguments:
-- "--entryPoints.websecure.http.tls.options=traefik-default-tlsoption@kubernetescrd"
-- "--serverstransport.insecureskipverify=true"
-service:
- spec:
-   sessionAffinity: ClientIP
-   externalTrafficPolicy: Local
+  - "--entrypoints.websecure.http.tls"
+  - "--providers.kubernetesingress=true"
+  - "--providers.kubernetesIngress.ingressClass=traefik"
+  - "--ping"
+  - "--metrics.prometheus"
 '''
         helm_traefik2_release = Release(self,'traefik2', name='traefik', repository='https://containous.github.io/traefik-helm-chart',
                                                 chart='traefik', namespace='traefik',
                                                 values=[helm_traefik2_value])
+
         cert_manager_ns_metadata = NamespaceMetadata(name='cert-manager',
-                                                     labels={'created_by': 'PythonCDK', "location": 'eastus',
+                                                     labels={'created_by': 'PythonCDK', "location": 'westeurope',
                                                              'resource_group': var_rg_name})
-        cert_manager_ns = Namespace(self, 'cert-manager-ns', metadata=[cert_manager_ns_metadata])
+        cert_manager_ns = Namespace(self, 'cert-manager-ns', metadata=[cert_manager_ns_metadata],)
 
         cert_manager_value = '''
  ingressShim:
      defaultIssuerKind: ClusterIssuer
-     defaultIssuerName: letsencrypt
+     defaultIssuerName: letsencrypt-prod
      installCRDs: true
  '''
         cert_manager_release = Release(self, 'cert-manager', name='cert-manager',
