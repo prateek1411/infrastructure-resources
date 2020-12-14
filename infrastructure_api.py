@@ -1,17 +1,28 @@
 import os
 import subprocess
 
-from Stacks import CreateK8Stack
+from decouple import config
+
+from create_stack import CreateK8Stack
 from k8sresources.Charts import K8SChart
-from flask import Flask, jsonify, request, make_response, json
+from flask import Flask, jsonify, request, json
 
 app = Flask(__name__)
+
+auth_dict = {"subscription_id": config('subscription_id'), "client_id": config('client_id'),
+             "client_secret": config('client_secret'), "tenant_id": config('tenant_id'),
+             "access_key": config('access_key')}
 
 
 @app.route('/generate/', methods=['GET', 'POST'])
 def create_stack():
     if request.method == 'GET':
-        return jsonify(CreateK8Stack().create_stack())
+        try:
+            K8SChart().create_chart()
+            CreateK8Stack().create_stack(auth_dict=auth_dict)
+        except:
+            return jsonify(exit())
+        return jsonify('Success')
 
 
 @app.route('/stack-file-list/<file_path>/', methods=['GET', 'POST'])
@@ -39,7 +50,7 @@ def stacklist():
         for dirPath, subdirList, filelist in os.walk(os.path.join(os.path.curdir,
                                                                   'generated_code'),
                                                      topdown=True):
-            subdirList[:] = [d for d in subdirList if d not in [".terraform",".dir"]]
+            subdirList[:] = [d for d in subdirList if d not in [".terraform", ".dir"]]
             tf_file_file = []
             for filename in filelist:
                 tf_file_file.append(filename)
@@ -71,7 +82,6 @@ def apply_tf_code(stack, command):
 
 
 def __run_command(tf_command):
-
     tf_apply = subprocess.Popen(tf_command, universal_newlines=True,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE, shell=True)
@@ -81,6 +91,7 @@ def __run_command(tf_command):
 
 
 if __name__ == '__main__':
-    #app.run()
-    CreateK8Stack().create_stack()
-    K8SChart().create_chart()
+    app.run()
+
+# CreateK8Stack().create_stack(auth_dict=auth_dict)
+# K8SChart().create_chart()

@@ -4,6 +4,6 @@ imports/*
 .terraform
 cdktf.out
 terraform.tfstate*
-.env
+../.env
 node_modules/*
 ../generated_code/*

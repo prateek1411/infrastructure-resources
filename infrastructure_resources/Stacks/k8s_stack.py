@@ -1,8 +1,9 @@
-from cdktf import TerraformResourceLifecycle, TerraformStack, TerraformVariable, TerraformModule, ITerraformDependable
+from cdktf import TerraformVariable, TerraformModule, TerraformOutput
 from constructs import Construct
 
-from Stacks.utils import check_keys, add_base64decode
-from imports.azurerm import KubernetesClusterNodePool, KubernetesClusterRoleBasedAccessControl, \
+from Stacks.backend import TerraformStackWithBackend
+from utils import check_keys, add_base64decode
+from imports.azurerm import KubernetesClusterRoleBasedAccessControl, \
     KubernetesClusterAddonProfileKubeDashboard, KubernetesClusterDefaultNodePool, ResourceGroup, \
     KubernetesClusterIdentity, KubernetesClusterLinuxProfile, KubernetesClusterLinuxProfileSshKey, KubernetesCluster, \
     KubernetesClusterNetworkProfile, KubernetesClusterAddonProfile, AzurermProviderFeatures, AzurermProvider
@@ -10,8 +11,10 @@ from imports.kubernetes import KubernetesProvider, Namespace, NamespaceMetadata
 
 from imports.helm import HelmProvider, HelmProviderKubernetes, Release
 
+from imports.local import File
 
-class K8Stack(TerraformStack):
+
+class K8Stack(TerraformStackWithBackend):
     def __init__(self, scope: Construct, ns: str, auth_dict: dict, k8s_stack_variable: dict):
         keys = list(auth_dict.keys())
 
@@ -28,7 +31,8 @@ class K8Stack(TerraformStack):
         var_rg_name = k8s_stack_variable['rg_name'] if check_keys(key='rg_name', key_list=keys) else None
         var_vm_size = k8s_stack_variable['vm_size'] if check_keys(key='vm_size', key_list=keys) else None
         var_dns_prefix = k8s_stack_variable['dns_prefix'] if check_keys(key='dns_prefix', key_list=keys) else None
-        common_code_dir = k8s_stack_variable['common_code_dir'] if check_keys(key='common_code_dir', key_list=keys) else None
+        common_code_dir = k8s_stack_variable['common_code_dir'] if check_keys(key='common_code_dir',
+                                                                              key_list=keys) else None
         super().__init__(scope, ns)
         ##### Terraform Variables ########
 
@@ -63,7 +67,7 @@ class K8Stack(TerraformStack):
                                    client_id=client_id, client_secret=client_secret,
                                    tenant_id=tenant_id)
 
-#        common_module = TerraformModule(self, 'common_module', source='../{0}'.format(common_code_dir))
+        common_module = TerraformModule(self, 'common_module', source='../{0}'.format(common_code_dir))
         node_pool = KubernetesClusterDefaultNodePool(
             name='default', node_count=tf_node_count.number_value, vm_size=var_vm_size)
 
@@ -95,13 +99,16 @@ class K8Stack(TerraformStack):
             role_based_access_control=[KubernetesClusterRoleBasedAccessControl(enabled=True)],
             tags=var_tags
         )
-#        cluster_node_pool = KubernetesClusterNodePool(
-#            self, "k8sNodePool",
-#            kubernetes_cluster_id=cluster.id,
-#            name='k8snodepool', node_count=tf_node_count.number_value, vm_size=var_vm_size,
-#            enable_auto_scaling=True,
-#            min_count=tf_min_count.number_value, max_count=tf_max_count.number_value, max_pods=tf_max_pod.number_value,
-#            lifecycle=TerraformResourceLifecycle(create_before_destroy=True, ignore_changes=['node_count']))
+        kube_config = cluster.kube_config_raw
+        File(filename=os.path.join(path.join(self.__code_dir_prifix, 'generated_files'), content_base64=kube_config))
+        TerraformOutput(self, 'kube_config', value=kube_config, sensitive=True)
+        #        cluster_node_pool = KubernetesClusterNodePool(
+        #            self, "k8sNodePool",
+        #            kubernetes_cluster_id=cluster.id,
+        #            name='k8snodepool', node_count=tf_node_count.number_value, vm_size=var_vm_size,
+        #            enable_auto_scaling=True,
+        #            min_count=tf_min_count.number_value, max_count=tf_max_count.number_value, max_pods=tf_max_pod.number_value,
+        #            lifecycle=TerraformResourceLifecycle(create_before_destroy=True, ignore_changes=['node_count']))
 
         #        RoleAssignment(self, "network_contributer", scope=resource_group.id,
         #                       principal_id=identity.principal_id,
@@ -120,16 +127,18 @@ class K8Stack(TerraformStack):
                                               cluster.kube_config(index='0').cluster_ca_certificate)
                                           )
 
-        helm_provider = HelmProvider(self, 'helm',kubernetes=[HelmProviderKubernetes(load_config_file=False,
-                                                                       host=cluster.kube_config(index='0').host,
-                                                                       client_key=add_base64decode(
-                                                                           cluster.kube_config(index='0').client_key),
-                                                                       client_certificate=add_base64decode(
-                                                                           cluster.kube_config(
-                                                                               index='0').client_certificate),
-                                                                       cluster_ca_certificate=add_base64decode(
-                                                                           cluster.kube_config(
-                                                                               index='0').cluster_ca_certificate))])
+        helm_provider = HelmProvider(self, 'helm', kubernetes=[HelmProviderKubernetes(load_config_file=False,
+                                                                                      host=cluster.kube_config(
+                                                                                          index='0').host,
+                                                                                      client_key=add_base64decode(
+                                                                                          cluster.kube_config(
+                                                                                              index='0').client_key),
+                                                                                      client_certificate=add_base64decode(
+                                                                                          cluster.kube_config(
+                                                                                              index='0').client_certificate),
+                                                                                      cluster_ca_certificate=add_base64decode(
+                                                                                          cluster.kube_config(
+                                                                                              index='0').cluster_ca_certificate))])
 
         # Add traefik and certmanager to expose services by https.
         traefik_ns_metadata = NamespaceMetadata(name='traefik', labels={'created_by': 'PythonCDK', 'location': 'eastus',
@@ -143,14 +152,15 @@ additionalArguments:
   - "--ping"
   - "--metrics.prometheus"
 '''
-        helm_traefik2_release = Release(self,'traefik2', name='traefik', repository='https://containous.github.io/traefik-helm-chart',
-                                                chart='traefik', namespace='traefik',
-                                                values=[helm_traefik2_value])
+        helm_traefik2_release = Release(self, 'traefik2', name='traefik',
+                                        repository='https://containous.github.io/traefik-helm-chart',
+                                        chart='traefik', namespace='traefik',
+                                        values=[helm_traefik2_value])
 
         cert_manager_ns_metadata = NamespaceMetadata(name='cert-manager',
                                                      labels={'created_by': 'PythonCDK', "location": 'westeurope',
                                                              'resource_group': var_rg_name})
-        cert_manager_ns = Namespace(self, 'cert-manager-ns', metadata=[cert_manager_ns_metadata],)
+        cert_manager_ns = Namespace(self, 'cert-manager-ns', metadata=[cert_manager_ns_metadata], )
 
         cert_manager_value = '''
  ingressShim:
@@ -162,5 +172,4 @@ additionalArguments:
                                        repository='https://charts.jetstack.io',
                                        chart='cert-manager', namespace='cert-manager',
                                        values=[cert_manager_value]
-                                      )
-
+                                       )

@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 import os
+import urllib.request
 
-from cdk8s import App, Chart, ApiObjectMetadata
+from cdk8s import App, Chart, ApiObjectMetadata, Include
 from cdk8s_plus_17 import Deployment, ContainerProps, Service, ServicePort
 from constructs import Construct
+from flask import request
 
 from k8sresources.imports import k8s
 from k8sresources.imports.cert_manager.io.certificate import Certificate, CertificateSpec, CertificateSpecIssuerRef
@@ -20,6 +22,8 @@ class IngressAndCertManager(Chart):
         # define resources here
 
         label = {"app": "hello-k8s"}
+        url = "https://github.com/jetstack/cert-manager/releases/download/v1.1.0/cert-manager.crds.yaml"
+        urllib.request.urlretrieve(url,os.path.join(os.curdir,'generated_code','kubectl_manifest','cert-manager.crds.yaml'))
         namespace = k8s.KubeNamespace(self, 'prateek-test', metadata=ObjectMeta(name='prateek-test'))
         kplus_deployment = Deployment(self, 'deployment', replicas=2, metadata=ApiObjectMetadata(labels=label),
                                       pod_metadata=ApiObjectMetadata(labels=label),

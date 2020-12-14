@@ -1,11 +1,11 @@
-from cdktf import TerraformStack, AzurermBackend
 from constructs import Construct
-
-from Stacks.utils import check_keys
+from utils import check_keys
 from imports.azurerm import AzurermProviderFeatures, AzurermProvider, ResourceGroup
 
+from Stacks.backend import TerraformStackWithBackend
 
-class CommonStack(TerraformStack):
+
+class CommonStack(TerraformStackWithBackend):
     def __init__(self, scope: Construct, ns: str, auth_dict):
         keys = list(auth_dict.keys())
         subscription_id = auth_dict['subscription_id'] if check_keys(key='subscription_id',
@@ -19,9 +19,7 @@ class CommonStack(TerraformStack):
         super().__init__(scope, ns)
 
         # define resources here
-        backend = AzurermBackend(self, resource_group_name='prateek-vm_group', storage_account_name='digirisestatic',
-                                 container_name='tfstate', key="prod.terraform.tfstate.prateek-vm2",
-                                 access_key=access_key)
+        backend = super().backend
         features = AzurermProviderFeatures()
 
         provider = AzurermProvider(self, 'azure', features=[features], subscription_id=subscription_id,
