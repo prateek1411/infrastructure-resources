@@ -1,15 +1,15 @@
 from cdktf import TerraformStack, AzurermBackend
 from constructs import Construct
-
-from utils import check_keys
-from imports.azurerm import AzurermProviderFeatures, AzurermProvider, ResourceGroup, \
+from infrastructure_resources.imports.azurerm import AzurermProviderFeatures, AzurermProvider, ResourceGroup, \
     VirtualNetwork, Subnet, NetworkInterface, VirtualMachineStorageOsDisk, VirtualMachineStorageImageReference, \
     VirtualMachineOsProfile, VirtualMachineOsProfileLinuxConfigSshKeys, VirtualMachineOsProfileLinuxConfig, \
     VirtualMachine, NetworkInterfaceIpConfiguration
 
+from utils import check_keys
+
 
 class VirtualMachineStack(TerraformStack):
-    def __init__(self, scope: Construct, ns: str, auth_dict):
+    def __init__(self, scope: Construct, ns: str, *, auth_dict: dict):
         keys = list(auth_dict.keys())
         subscription_id = auth_dict['subscription_id'] if check_keys(key='subscription_id',
                                                                      key_list=keys) else None

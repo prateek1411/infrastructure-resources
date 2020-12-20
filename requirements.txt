@@ -4,6 +4,9 @@ pycryptodome
 Flask
 gunicorn
 Flask-AutoIndex
-constructs~=3.2.34
-cdk8s~=1.0.0.b3
-cdk8s-plus-17~=1.0.0.b3
+constructs~=3.2.72
+cdk8s~=1.0.0.b5
+cdk8s-plus-17~=1.0.0.b5
+pyyaml
+azure-identity
+azure-keyvault-secrets

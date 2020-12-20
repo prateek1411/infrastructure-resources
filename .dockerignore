@@ -1,6 +1,6 @@
 /package-lock.json
 /*.pem
-
+.terraform
 /k8sresources/imports/
 .env
 .idea/.gitignore
@@ -11,8 +11,5 @@
 .idea/vcs.xml
 __pycache__/
 generated_code/
-infrastructure_resources/Stacks/__pycache__/
-infrastructure_resources/__pycache__/
 infrastructure_resources/k8s_stack.pem
-k8sresources/lib/__pycache__/
 venv/

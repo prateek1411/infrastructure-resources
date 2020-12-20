@@ -1,0 +1,22 @@
+terraform_inputs:
+  tags:
+    foo: 'bar'
+  rg_name: 'k8s_rg'
+  vm_size: 'Standard_B2s'
+  dns_prefix: 'k8s'
+  common_code_dir: 'common'
+application:
+  namespace: 'prateek-test'
+  image: 'paulbouwer/hello-kubernetes:1.7'
+  replicas: 2
+  lable:
+    app: 'hello-k8s'
+  service_selector: app
+  secret_name: 'prateek-traefik-cert'
+  common_name: 'prateek-traefik.westeurope.cloudapp.azure.com'
+  dns_names:
+    - 'prateek-traefik.westeurope.cloudapp.azure.com'
+  private_key_secret_ref: 'prateek_cert'
+  email: 'prateek1411@gmail.com'
+  configmap_values:
+    key: 'value'

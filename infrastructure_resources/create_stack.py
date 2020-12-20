@@ -1,41 +1,66 @@
 import os
 
+import yaml
 from Crypto.PublicKey import RSA
 from cdktf import App
 from decouple import config
 
-import common_stack
-import k8s_stack
-import virtual_machine_stack
+from infrastructure_resources.Stacks import common_stack
+from infrastructure_resources.Stacks import k8s_stack
+from infrastructure_resources.Stacks import virtual_machine_stack
+from k8s_stack import OptionsK8Stack
 
 
-class CreateK8Stack():
-    def __init__(self):
-        super().__init__()
+class CreateStack:
+    def __init__(self, *, deployment_id: str, blueprint_id: str):
+        self.__pem_file_name = '{0}.pem'.format(deployment_id)
+        self.__code_dir_prefix = None
+        self.deployment_id = deployment_id
+        self.blueprint_id = blueprint_id
 
-    __code_dir_prifix = 'generated_code'
-    key = RSA.generate(4096, os.urandom)
-    with open(os.path.join("stack-vm2.pem"), 'wb') as content_file:
-        content_file.write(key.exportKey('PEM'))
-        key_data = str(key.publickey().exportKey('OpenSSH').decode("utf-8"))
+    def create_stack(self, *, gen_code_dir: str, auth_dict: dict, values: str = None, dict_values: dict = None):
+        self.__code_dir_prefix = os.path.join(gen_code_dir, self.blueprint_id, self.deployment_id)
+        if not os.path.isdir(self.__code_dir_prefix):
+            try:
+                os.makedirs(self.__code_dir_prefix)
+            except OSError:
+                print("Creation of the directory %s failed" % self.__code_dir_prefix)
+                exit(1)
+            else:
+                print("Successfully created the directory %s" % self.__code_dir_prefix)
+        else:
+            print("directory %s already exists" % self.__code_dir_prefix)
 
-
-
-    def create_stack(self,auth_dict:dict):
+        if os.path.isfile(self.__pem_file_name):
+            with open(os.path.join(self.__pem_file_name), 'r') as content_file:
+                self.key_data = str(RSA.import_key(content_file.read()).exportKey('OpenSSH').decode('utf-8'))
+        else:
+            key = RSA.generate(4096, os.urandom)
+            with open(os.path.join(self.__pem_file_name), 'wb') as content_file:
+                content_file.write(key.exportKey('PEM'))
+                self.key_data = str(key.publickey().exportKey('OpenSSH').decode('utf-8'))
         key = {"key_data": self.key_data}
-        auth_dict1 = {**auth_dict , **key}
-        app_common = App(context={'stack': 'common_stack'}, outdir=os.path.join(self.__code_dir_prifix, 'common'),
+        auth_dict1 = {**auth_dict, **key}
+        app_common = App(context={'stack': 'common_stack'}, outdir=os.path.join(self.__code_dir_prefix, 'common'),
                          stack_traces=False)
-        app_vm = App(context={'stack': 'virtual_machine_stack'}, outdir=os.path.join(self.__code_dir_prifix, 'vm'),
+        app_vm = App(context={'stack': 'virtual_machine_stack'}, outdir=os.path.join(self.__code_dir_prefix, 'vm'),
                      stack_traces=False)
-        app_k8s = App(context={'stack': 'k8s_stack'}, outdir=os.path.join(self.__code_dir_prifix, 'k8s'),
+        app_k8s = App(context={'stack': 'k8s_stack'}, outdir=os.path.join(self.__code_dir_prefix, 'k8s'),
                       stack_traces=False)
-        common_stack.CommonStack(app_common, 'common_stack', auth_dict1)
+        common_stack.CommonStack(app_common, 'common_stack', auth_dict=auth_dict1)
         app_common.synth()
-        virtual_machine_stack.VirtualMachineStack(app_vm, "virtual-machine", auth_dict1)
+        virtual_machine_stack.VirtualMachineStack(app_vm, "virtual-machine", auth_dict=auth_dict1)
         app_vm.synth()
-        k8s_stack_variable = {'tags': {'foo': 'bar'}, 'rg_name': 'k8s_rg', 'vm_size': 'Standard_B2s',
-                              'dns_prefix': 'k8s', 'common_code_dir': 'common'.format(self.__code_dir_prifix)}
-        k8s_stack.K8Stack(app_k8s, "k8s-cluster", auth_dict=auth_dict1, k8s_stack_variable=k8s_stack_variable)
+        if values is not None:
+            if os.path.isfile(values) and os.path.splitext(values)[-1].lower() in ('.yaml', '.yml'):
+                with open(values, mode='r') as values_yaml:
+                    try:
+                        dict_values = yaml.full_load(values_yaml)['terraform_inputs']
+                    except KeyError as key_err:
+                        print('Application Configurations not found')
+                        exit(1)
+        #        print(dict_values)
+        options = OptionsK8Stack(dict_values)
+        k8s_stack.K8Stack(app_k8s, "k8s-cluster", auth_dict=auth_dict1, k8s_stack_variable=options)
         app_k8s.synth()
         return "success"

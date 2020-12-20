@@ -1,21 +1,33 @@
-from cdktf import TerraformVariable, TerraformModule, TerraformOutput
-from constructs import Construct
+import os
 
-from Stacks.backend import TerraformStackWithBackend
-from utils import check_keys, add_base64decode
-from imports.azurerm import KubernetesClusterRoleBasedAccessControl, \
+from cdktf import TerraformVariable, TerraformModule, TerraformOutput, TerraformResourceLifecycle
+from constructs import Construct, ConstructOptions
+from infrastructure_resources.imports.azurerm import KubernetesClusterRoleBasedAccessControl, \
     KubernetesClusterAddonProfileKubeDashboard, KubernetesClusterDefaultNodePool, ResourceGroup, \
     KubernetesClusterIdentity, KubernetesClusterLinuxProfile, KubernetesClusterLinuxProfileSshKey, KubernetesCluster, \
-    KubernetesClusterNetworkProfile, KubernetesClusterAddonProfile, AzurermProviderFeatures, AzurermProvider
-from imports.kubernetes import KubernetesProvider, Namespace, NamespaceMetadata
+    KubernetesClusterNetworkProfile, KubernetesClusterAddonProfile, AzurermProviderFeatures, AzurermProvider, \
+    KubernetesClusterNodePool, RoleAssignment
+from infrastructure_resources.imports.helm import HelmProvider, HelmProviderKubernetes, Release
+from infrastructure_resources.imports.kubernetes import KubernetesProvider, Namespace, NamespaceMetadata
+from infrastructure_resources.imports.local import File
+from infrastructure_resources.Stacks.backend import TerraformStackWithBackend
+from utils import check_keys, add_base64decode
 
-from imports.helm import HelmProvider, HelmProviderKubernetes, Release
 
-from imports.local import File
-
+class OptionsK8Stack(ConstructOptions):
+    def __init__(self,dict_values: dict):
+        try:
+            self.rg_name= dict_values['rg_name']
+            self.vm_size = dict_values['vm_size']
+            self.dns_prefix= dict_values['dns_prefix']
+            self.common_code_dir= dict_values['common_code_dir']
+            self.tags = dict_values['tags']
+            super().__init__()
+        except KeyError as key_error:
+            raise key_error
 
 class K8Stack(TerraformStackWithBackend):
-    def __init__(self, scope: Construct, ns: str, auth_dict: dict, k8s_stack_variable: dict):
+    def __init__(self, scope: Construct, ns: str, *, auth_dict: dict, k8s_stack_variable: OptionsK8Stack ):
         keys = list(auth_dict.keys())
 
         access_key = auth_dict['access_key'] if check_keys(key='access_key', key_list=keys) else None
@@ -26,13 +38,12 @@ class K8Stack(TerraformStackWithBackend):
         client_secret = auth_dict['client_secret'] if check_keys(key='client_secret', key_list=keys) else None
         tenant_id = auth_dict['tenant_id'] if check_keys(key='tenant_id', key_list=keys) else None
         ######### App Variables###########
-        keys = list(k8s_stack_variable.keys())
-        var_tags = k8s_stack_variable['tags'] if check_keys(key='tags', key_list=keys) else None
-        var_rg_name = k8s_stack_variable['rg_name'] if check_keys(key='rg_name', key_list=keys) else None
-        var_vm_size = k8s_stack_variable['vm_size'] if check_keys(key='vm_size', key_list=keys) else None
-        var_dns_prefix = k8s_stack_variable['dns_prefix'] if check_keys(key='dns_prefix', key_list=keys) else None
-        common_code_dir = k8s_stack_variable['common_code_dir'] if check_keys(key='common_code_dir',
-                                                                              key_list=keys) else None
+#        keys = list(k8s_stack_variable.keys())
+        var_tags = k8s_stack_variable.tags
+        var_rg_name = k8s_stack_variable.rg_name
+        var_vm_size = k8s_stack_variable.vm_size
+        var_dns_prefix = k8s_stack_variable.dns_prefix
+        common_code_dir = k8s_stack_variable.common_code_dir
         super().__init__(scope, ns)
         ##### Terraform Variables ########
 
@@ -63,15 +74,14 @@ class K8Stack(TerraformStackWithBackend):
                                        default=20)
         features = AzurermProviderFeatures()
 
-        provider = AzurermProvider(self, 'azure', features=[features], subscription_id=subscription_id,
+        AzurermProvider(self, 'azure', features=[features], subscription_id=subscription_id,
                                    client_id=client_id, client_secret=client_secret,
                                    tenant_id=tenant_id)
 
-        common_module = TerraformModule(self, 'common_module', source='../{0}'.format(common_code_dir))
+        TerraformModule(self, 'common_module', source='../{0}'.format(common_code_dir))
         node_pool = KubernetesClusterDefaultNodePool(
             name='default', node_count=tf_node_count.number_value, vm_size=var_vm_size)
 
-        # resource_group = ResourceGroupConfig(name='test', location='East US')
         resource_group = ResourceGroup(self, 'azure-rg', name=var_rg_name, location=tf_location.string_value)
 
         identity = KubernetesClusterIdentity(type='SystemAssigned')
@@ -100,24 +110,22 @@ class K8Stack(TerraformStackWithBackend):
             tags=var_tags
         )
         kube_config = cluster.kube_config_raw
-        File(filename=os.path.join(path.join(self.__code_dir_prifix, 'generated_files'), content_base64=kube_config))
+        File(self, 'kube-config', filename=os.path.join(os.path.join(os.curdir, '..', 'generated_files')),
+             content=kube_config)
         TerraformOutput(self, 'kube_config', value=kube_config, sensitive=True)
-        #        cluster_node_pool = KubernetesClusterNodePool(
-        #            self, "k8sNodePool",
-        #            kubernetes_cluster_id=cluster.id,
-        #            name='k8snodepool', node_count=tf_node_count.number_value, vm_size=var_vm_size,
-        #            enable_auto_scaling=True,
-        #            min_count=tf_min_count.number_value, max_count=tf_max_count.number_value, max_pods=tf_max_pod.number_value,
-        #            lifecycle=TerraformResourceLifecycle(create_before_destroy=True, ignore_changes=['node_count']))
+        cluster_node_pool = KubernetesClusterNodePool( self, "k8sNodePool", kubernetes_cluster_id=cluster.id,
+        name='k8snodepool', node_count=tf_node_count.number_value, vm_size=var_vm_size, enable_auto_scaling=True,
+        min_count=tf_min_count.number_value, max_count=tf_max_count.number_value, max_pods=tf_max_pod.number_value,
+        lifecycle=TerraformResourceLifecycle(create_before_destroy=True, ignore_changes=['node_count']))
 
-        #        RoleAssignment(self, "network_contributer", scope=resource_group.id,
-        #                       principal_id=identity.principal_id,
-        #                       role_definition_name='Network Contributor')
-        #        RoleAssignment(self, "kubectl_pull", scope=resource_group.id,
-        #                       principal_id=cluster.kubelet_identity(index='0').object_id,
-        #                       role_definition_name='AcrPull')
-        #
-        ###############Removed Temporarly ######################################
+        #RoleAssignment(self, "network_contributer", scope=resource_group.id,
+        #               principal_id=identity.principal_id,
+        #               role_definition_name='Network Contributor')
+        #RoleAssignment(self, "kubectl_pull", scope=resource_group.id,
+        #               principal_id=cluster.kubelet_identity(index='0').object_id,
+        #               role_definition_name='AcrPull')
+
+        #############Removed Temporarly ######################################
         k8s_provider = KubernetesProvider(self, 'k8s', load_config_file=False,
                                           host=cluster.kube_config(index='0').host,
                                           client_key=add_base64decode(cluster.kube_config(index='0').client_key),
@@ -151,7 +159,10 @@ additionalArguments:
   - "--providers.kubernetesIngress.ingressClass=traefik"
   - "--ping"
   - "--metrics.prometheus"
-'''
+ports:
+  web:
+    redirectTo: websecure
+ '''
         helm_traefik2_release = Release(self, 'traefik2', name='traefik',
                                         repository='https://containous.github.io/traefik-helm-chart',
                                         chart='traefik', namespace='traefik',
@@ -164,12 +175,17 @@ additionalArguments:
 
         cert_manager_value = '''
  ingressShim:
-     defaultIssuerKind: ClusterIssuer
+     defaultIssuerKind: ClusterIssuerter
      defaultIssuerName: letsencrypt-prod
-     installCRDs: true
+ installCRDs: true
  '''
         cert_manager_release = Release(self, 'cert-manager', name='cert-manager',
                                        repository='https://charts.jetstack.io',
                                        chart='cert-manager', namespace='cert-manager',
                                        values=[cert_manager_value]
                                        )
+
+
+        
+
+

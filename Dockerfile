@@ -19,18 +19,30 @@ RUN AVAILABLE_TERRAFORM_VERSIONS="0.12.29 0.13.0 ${DEFAULT_TERRAFORM_VERSION}" &
     ln -s /usr/local/bin/tf/versions/${DEFAULT_TERRAFORM_VERSION}/terraform /usr/local/bin/terraform
 
 #install cdktf
-RUN npm install --global constructs@^3.0.0 eslint-plugin-react@7.21.5 eslint@^7 cdktf-cli@0.0.18 cdktf@0.0.18
+RUN npm install --global constructs@^3.0.0 eslint-plugin-react@7.21.5 eslint@^7 cdktf-cli@0.0.19 cdktf@0.0.19
+#insall cdk8s
+RUN npm install --global cdk8s-cli
+
+#install kubectl
+RUN curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+RUN chmod +x kubectl
+RUN mv kubectl /usr/local/bin/
+
+
 # Install infrastruture code
+
 RUN mkdir -p /opt/app
 RUN mkdir -p /opt/app/pip_cache
-RUN mkdir -p /opt/app/infrastructure_resources
+RUN mkdir -p /opt/app/
 RUN mkdir -p /opt/app/pip_cache
-COPY Stacks /opt/app/infrastructure_resources/
-COPY ./ /opt/app/infrastructure_resources/
-WORKDIR /opt/app/infrastructure_resources
-
+COPY ./ /opt/app/
+WORKDIR /opt/app/
 RUN pip install -r requirements.txt --cache-dir /opt/app/pip_cache
+WORKDIR /opt/app/infrastructure_resources
 RUN cdktf get
+WORKDIR /opt/app/k8sresources
+RUN cdk8s gen -l python
+WORKDIR /opt/app/
 STOPSIGNAL SIGTERM
 EXPOSE 5000
 CMD ["/bin/bash","/opt/app/infrastructure_resources/start-server.sh"]
