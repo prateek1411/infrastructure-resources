@@ -18,7 +18,7 @@ class CreateStack:
         self.deployment_id = deployment_id
         self.blueprint_id = blueprint_id
 
-    def create_stack(self, *, gen_code_dir: str, auth_dict: dict, values: str = None, dict_values: dict = None):
+    def create_stack(self, *, gen_code_dir: str, auth_dict: dict, deployment_variables: str = None, dict_values: dict = None):
         self.__code_dir_prefix = os.path.join(gen_code_dir, self.blueprint_id, self.deployment_id)
         if not os.path.isdir(self.__code_dir_prefix):
             try:
@@ -51,15 +51,27 @@ class CreateStack:
         app_common.synth()
         virtual_machine_stack.VirtualMachineStack(app_vm, "virtual-machine", auth_dict=auth_dict1)
         app_vm.synth()
-        if values is not None:
-            if os.path.isfile(values) and os.path.splitext(values)[-1].lower() in ('.yaml', '.yml'):
-                with open(values, mode='r') as values_yaml:
-                    try:
-                        dict_values = yaml.full_load(values_yaml)['terraform_inputs']
-                    except KeyError as key_err:
-                        print('Application Configurations not found')
-                        exit(1)
-        #        print(dict_values)
+        if type(deployment_variables).__name__ == 'dict':
+            try:
+                dict_values = deployment_variables['terraform_inputs']
+            except KeyError as key_err:
+                print('Application Configurations not found')
+                exit(1)
+        else:
+            if deployment_variables is not None:
+                if os.path.isfile(deployment_variables):
+                    if os.path.splitext(deployment_variables)[-1].lower() in ('.yaml', '.yml'):
+                        with open(deployment_variables, mode='r') as values_yaml:
+                            try:
+                                dict_values = yaml.full_load(values_yaml)['terraform_inputs']
+                            except KeyError as key_err:
+                                print('Application Configurations not found')
+                                exit(1)
+                    else:
+                        print("please provide yaml or yml file")
+                #       print(dict_values)
+
+
         options = OptionsK8Stack(dict_values)
         k8s_stack.K8Stack(app_k8s, "k8s-cluster", auth_dict=auth_dict1, k8s_stack_variable=options)
         app_k8s.synth()
