@@ -5,7 +5,7 @@ import sys
 import yaml
 from decouple import config
 
-from charts.application_charts import CreateChart
+from k8sresources.charts.application_charts import CreateChart
 from infrastructure_resources.create_stack import CreateStack
 from flask import Flask, jsonify, request, json
 
