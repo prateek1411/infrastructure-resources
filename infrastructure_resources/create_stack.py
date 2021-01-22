@@ -8,7 +8,6 @@ from decouple import config
 from infrastructure_resources.Stacks import common_stack
 from infrastructure_resources.Stacks import k8s_stack
 from infrastructure_resources.Stacks import virtual_machine_stack
-from k8s_stack import OptionsK8Stack
 
 
 class CreateStack:
@@ -72,7 +71,7 @@ class CreateStack:
                 #       print(dict_values)
 
 
-        options = OptionsK8Stack(dict_values)
+        options = k8s_stack.OptionsK8Stack(dict_values)
         k8s_stack.K8Stack(app_k8s, "k8s-cluster", auth_dict=auth_dict1, k8s_stack_variable=options)
         app_k8s.synth()
         return "success"
