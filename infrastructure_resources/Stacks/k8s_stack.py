@@ -52,13 +52,13 @@ class K8Stack(TerraformStackWithBackend):
         tf_location = TerraformVariable(self, 'location', type='string', default='West Europe')
 
         tf_storage_resource_group_name = TerraformVariable(self, 'stogage_resource_group_name', type='string',
-                                                           default='prateek-vm_group')
+                                                           default='Prateek-Test')
 
         tf_resource_group_name = TerraformVariable(self, 'resource_group_name', type='string',
                                                    default=var_rg_name)
 
         tf_storage_account_name = TerraformVariable(self, 'storage_account_name', type='string',
-                                                    default='digirisestatic')
+                                                    default='terraformstateprateek')
         tf_container_name = TerraformVariable(self, 'container_name', type='string',
                                               default='tfstate')
 
@@ -97,6 +97,7 @@ class K8Stack(TerraformStackWithBackend):
             dns_prefix=var_dns_prefix,
             location=resource_group.location,
             resource_group_name=resource_group.name,
+            node_resource_group="{0}-nodes".format(resource_group.name),
             identity=[identity],
             linux_profile=[linux_profile],
             network_profile=[KubernetesClusterNetworkProfile(network_plugin='azure')],
@@ -173,18 +174,18 @@ ports:
                                                              'resource_group': var_rg_name})
         cert_manager_ns = Namespace(self, 'cert-manager-ns', metadata=[cert_manager_ns_metadata], )
 
-        cert_manager_value = '''
- ingressShim:
-     defaultIssuerKind: ClusterIssuerter
-     defaultIssuerName: letsencrypt-prod
- installCRDs: true
- '''
-        cert_manager_release = Release(self, 'cert-manager', name='cert-manager',
-                                       repository='https://charts.jetstack.io',
-                                       chart='cert-manager', namespace='cert-manager',
-                                       values=[cert_manager_value]
-                                       )
-
+#        cert_manager_value = '''
+# ingressShim:
+#     defaultIssuerKind: ClusterIssuerter
+#     defaultIssuerName: letsencrypt-prod
+# installCRDs: true
+# '''
+#        cert_manager_release = Release(self, 'cert-manager', name='cert-manager',
+#                                       repository='https://charts.jetstack.io',
+#                                       chart='cert-manager', namespace='cert-manager',
+#                                       values=[cert_manager_value]
+#                                       )
+#
 
         
 

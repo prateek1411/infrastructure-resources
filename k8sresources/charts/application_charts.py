@@ -1,7 +1,9 @@
 import os
+import urllib.request
+
 import yaml
 
-from cdk8s import App, Chart
+from cdk8s import App, Chart, Include
 from constructs import Construct
 
 from k8sresources.lib.utils import ApplicationOptions
@@ -39,6 +41,8 @@ class HelloApplication(Chart):
             exit(1)
         try:
             options = ApplicationOptions(dict_values)
+
+            #include_cert_manager = Include(self,'cert-manager',url='https://github.com/jetstack/cert-manager/releases/download/v1.1.0/cert-manager.yaml')
 
             app_namespace = ApplicationNamespace(self, 'namespace', namespace=options.namespace)
             configmap = ApplicationConfigMap(self, 'config-map', namespace=app_namespace.namespace)
@@ -78,6 +82,10 @@ class CreateChart:
                 print("Successfully created the directory %s" % self.__code_dir_prefix)
         else:
             print("directory %s already exists" % self.__code_dir_prefix)
+
         app = App(outdir=os.path.join(self.__code_dir_prefix, 'kubectl_manifest'))
         HelloApplication(app, 'k8sresources', deployment_variables=values)
         app.synth()
+        #Add Cert-manager manifest
+        url='https://github.com/jetstack/cert-manager/releases/download/v1.1.0/cert-manager.yaml'
+        urllib.request.urlretrieve(url, os.path.join(self.__code_dir_prefix, 'kubectl_manifest','cert-manager.yaml'))

@@ -22,7 +22,7 @@ class VirtualMachineStack(TerraformStack):
         super().__init__(scope, ns)
 
         # define resources here
-        backend = AzurermBackend(self, resource_group_name='prateek-vm_group', storage_account_name='digirisestatic',
+        backend = AzurermBackend(self, resource_group_name='Prateek-Test', storage_account_name='terraformstateprateek',
                                  container_name='tfstate', key="prod.terraform.tfstate.prateek-vm2",
                                  access_key=access_key)
         features = AzurermProviderFeatures()

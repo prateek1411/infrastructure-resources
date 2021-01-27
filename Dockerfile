@@ -19,7 +19,7 @@ RUN AVAILABLE_TERRAFORM_VERSIONS="0.12.29 0.13.0 ${DEFAULT_TERRAFORM_VERSION}" &
     ln -s /usr/local/bin/tf/versions/${DEFAULT_TERRAFORM_VERSION}/terraform /usr/local/bin/terraform
 
 #install cdktf
-RUN npm install --global constructs@^3.0.0 eslint-plugin-react@7.21.5 eslint@^7 cdktf-cli@0.0.19 cdktf@0.0.19
+RUN npm install --global constructs@^3.0.0 eslint-plugin-react@7.21.5 eslint@^7 cdktf-cli@0.1.0 cdktf@0.1.0
 #insall cdk8s
 RUN npm install --global cdk8s-cli
 

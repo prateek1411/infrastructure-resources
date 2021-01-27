@@ -1,7 +1,7 @@
 terraform_inputs:
   tags:
     foo: 'bar'
-  rg_name: 'k8s_rg'
+  rg_name: 'rg-common-k8s_rg'
   vm_size: 'Standard_B2s'
   dns_prefix: 'k8s'
   common_code_dir: 'common'
