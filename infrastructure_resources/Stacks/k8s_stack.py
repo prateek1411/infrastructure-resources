@@ -78,7 +78,7 @@ class K8Stack(TerraformStackWithBackend):
                                    client_id=client_id, client_secret=client_secret,
                                    tenant_id=tenant_id)
 
-        TerraformModule(self, 'common_module', source='../{0}'.format(common_code_dir))
+        #TerraformModule(self, 'common_module', source='../{0}'.format(common_code_dir))
         node_pool = KubernetesClusterDefaultNodePool(
             name='default', node_count=tf_node_count.number_value, vm_size=var_vm_size)
 

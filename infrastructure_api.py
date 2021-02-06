@@ -86,21 +86,19 @@ def application_stack_list(blueprint_id, deployment_id):
 def apply_tf_code():
     if request.method == 'POST':
         json_data = request.get_json(force=True)
-
         try:
             deployment_id = json_data['deployment']
             blueprint_id = json_data['blueprint']
             stack = json_data['stack_name']
-            command = json_data['command']
             tf_dir = os.path.join(base_code_dir, 'terraform', blueprint_id, deployment_id, stack)
-            stack_command = 'terraform {0} -auto-approve {1}'.format(command, tf_dir)
-            if command == 'init' or command == 'plan':
-                stack_command = 'terraform {0} {1}'.format(command, tf_dir)
+            stack_command = 'terraform init {0}'.format(tf_dir)
+            __run_command(stack_command)
+            stack_command = 'terraform apply -auto-approve {0}'.format(tf_dir)
+            cmd_output = __run_command(stack_command)
+            return jsonify(cmd_output)
         except KeyError as key_error:
             print('Input Value not found')
             return jsonify("Unexpected error:", sys.exc_info()[0])
-        cmd_output = __run_command(stack_command)
-        return jsonify(cmd_output)
 
 
 @app.route('/application-code', methods=['POST'])
@@ -112,7 +110,7 @@ def apply_app_code():
             deployment_id = json_data['deployment']
             blueprint_id = json_data['blueprint']
             stack = json_data['stack_name']
-            command = json_data['command']
+            command = 'apply'
             kubeconconfig = os.path.join(base_code_dir, 'terraform', blueprint_id, deployment_id, 'generated_files')
             kube_manifest = os.path.join(base_code_dir, 'kubernetes', blueprint_id, deployment_id, stack)
             stack_command = 'kubectl {0} --kubeconfig {1} -f {2}'.format(command, kubeconconfig, kube_manifest)

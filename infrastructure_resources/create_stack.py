@@ -40,16 +40,16 @@ class CreateStack:
                 self.key_data = str(key.publickey().exportKey('OpenSSH').decode('utf-8'))
         key = {"key_data": self.key_data}
         auth_dict1 = {**auth_dict, **key}
-        app_common = App(context={'stack': 'common_stack'}, outdir=os.path.join(self.__code_dir_prefix, 'common'),
-                         stack_traces=False)
-        app_vm = App(context={'stack': 'virtual_machine_stack'}, outdir=os.path.join(self.__code_dir_prefix, 'vm'),
-                     stack_traces=False)
+#        app_common = App(context={'stack': 'common_stack'}, outdir=os.path.join(self.__code_dir_prefix, 'common'),
+#                         stack_traces=False)
+#        app_vm = App(context={'stack': 'virtual_machine_stack'}, outdir=os.path.join(self.__code_dir_prefix, 'vm'),
+#                     stack_traces=False)
         app_k8s = App(context={'stack': 'k8s_stack'}, outdir=os.path.join(self.__code_dir_prefix, 'k8s'),
                       stack_traces=False)
-        common_stack.CommonStack(app_common, 'common_stack', auth_dict=auth_dict1)
-        app_common.synth()
-        virtual_machine_stack.VirtualMachineStack(app_vm, "virtual-machine", auth_dict=auth_dict1)
-        app_vm.synth()
+#        common_stack.CommonStack(app_common, 'common_stack', auth_dict=auth_dict1)
+#        app_common.synth()
+#        virtual_machine_stack.VirtualMachineStack(app_vm, "virtual-machine", auth_dict=auth_dict1)
+#        app_vm.synth()
         if type(deployment_variables).__name__ == 'dict':
             try:
                 dict_values = deployment_variables['terraform_inputs']
