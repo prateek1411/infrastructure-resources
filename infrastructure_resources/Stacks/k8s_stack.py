@@ -2,6 +2,7 @@ import os
 
 from cdktf import TerraformVariable, TerraformModule, TerraformOutput, TerraformResourceLifecycle
 from constructs import Construct, ConstructOptions
+from decouple import config
 from infrastructure_resources.imports.azurerm import KubernetesClusterRoleBasedAccessControl, \
     KubernetesClusterAddonProfileKubeDashboard, KubernetesClusterDefaultNodePool, ResourceGroup, \
     KubernetesClusterIdentity, KubernetesClusterLinuxProfile, KubernetesClusterLinuxProfileSshKey, KubernetesCluster, \
@@ -58,7 +59,7 @@ class K8Stack(TerraformStackWithBackend):
                                                    default=var_rg_name)
 
         tf_storage_account_name = TerraformVariable(self, 'storage_account_name', type='string',
-                                                    default='terraformstateprateek')
+                                                    default=config('storage_account_name'))
         tf_container_name = TerraformVariable(self, 'container_name', type='string',
                                               default='tfstate')
 
